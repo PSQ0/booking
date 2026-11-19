@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status
+from rest_framework.generics import RetrieveUpdateAPIView
 
 from django.shortcuts import get_object_or_404
 
@@ -48,20 +49,42 @@ class ServicesListApiView(APIView):
         return Response(serializer.data)
 
 
-class ServiceDetailAPIView(APIView):
+class ServiceDetailAPIView(RetrieveUpdateAPIView):
     permission_classes = [AllowAny]
+    serializer_class = ServiceOfferingSerializer
+    queryset = ServiceOffering.objects.filter(is_active=True)
 
-    def get(self, request, pk):
-        service = get_object_or_404(
-            ServiceOffering,
-            pk=pk,
-            is_active=True
-        )
+    def delete(self, request, *args, **kwargs):
+        service = self.get_object()
+        service.is_active = False
+        service.save(update_fields=["is_active"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # def get(self, request, pk):
+    #     service = get_object_or_404(
+    #         ServiceOffering,
+    #         pk=pk,
+    #         is_active=True
+    #     )
         
-        serializer = ServiceOfferingSerializer(service)
+    #     serializer = ServiceOfferingSerializer(service)
 
-        return Response(serializer.data)
+    #     return Response(serializer.data)
 
+    # def delete(self, request, pk):
+    #     service = get_object_or_404(ServiceOffering, pk=pk, is_active=True)
+    #     service.is_active = False
+    #     service.save(update_fields=["is_active"])
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # def patch(self, request, pk):
+    #     service = get_object_or_404(ServiceOffering, pk=pk, is_active=True)
+    #     serializer = ServiceOfferingSerializer(
+    #         service, data=request.data, partial=True
+    #     )
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+    #     return Response(serializer.data)
 
 class ServicesSummaryAPIView(APIView):
     permission_classes = [AllowAny]
